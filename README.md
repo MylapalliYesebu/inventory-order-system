@@ -19,5 +19,10 @@ A console-based Java application built using Core Java concepts.
 - service: Inventory business logic
 - app: Main application and menu
 
+## Sample Execution
+
+![Program Execution](screenshots/execution-output.png)
+
+
 ## Purpose
 This project was built to strengthen Java fundamentals and logical thinking.
