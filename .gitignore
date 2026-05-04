@@ -2,3 +2,6 @@ bin/
 .vscode/
 *.class
 folder_structure.txt
+out/
+data/
+lib/*.jar

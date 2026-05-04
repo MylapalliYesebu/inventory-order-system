@@ -8,10 +8,21 @@ public class Order {
     private double totalPrice;
 
     public Order(int orderId, int productId, int orderQuantity, double pricePerUnit) {
+        this(orderId, productId, orderQuantity, orderQuantity * pricePerUnit, true);
+    }
+
+    private Order(int orderId, int productId, int orderQuantity, double totalPrice, boolean totalPriceAlreadyCalculated) {
+        if (orderQuantity <= 0) {
+            throw new IllegalArgumentException("Order quantity must be greater than zero.");
+        }
         this.orderId = orderId;
         this.productId = productId;
         this.orderQuantity = orderQuantity;
-        this.totalPrice = orderQuantity * pricePerUnit;
+        this.totalPrice = totalPrice;
+    }
+
+    public static Order fromTotalPrice(int orderId, int productId, int orderQuantity, double totalPrice) {
+        return new Order(orderId, productId, orderQuantity, totalPrice, true);
     }
 
     // Getters
