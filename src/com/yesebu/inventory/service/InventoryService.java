@@ -1,38 +1,58 @@
 package com.yesebu.inventory.service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
-import com.yesebu.inventory.model.Product;
+import com.yesebu.inventory.dao.OrderDAO;
+import com.yesebu.inventory.dao.ProductDAO;
+import com.yesebu.inventory.db.DatabaseManager;
 import com.yesebu.inventory.model.Order;
+import com.yesebu.inventory.model.Product;
 
 public class InventoryService {
 
-    private Map<Integer, Product> productMap;
+    private final ProductDAO productDAO;
+    private final OrderDAO orderDAO;
+    private final DatabaseManager databaseManager;
 
     public InventoryService() {
-        productMap = new HashMap<>();
+        databaseManager = new DatabaseManager();
+        productDAO = new ProductDAO(databaseManager);
+        orderDAO = new OrderDAO(databaseManager);
     }
 
     // Add new product
     public void addProduct(Product p) {
-        if (productMap.containsKey(p.getProductId())) {
-            System.out.println("Product with this ID already exists.");   
-        }
-        else {
-            productMap.put(p.getProductId(), p);
-            System.out.println("Product added successfully.");
+        int productId = productDAO.addProduct(p);
+        if (productId > 0) {
+            System.out.println("Product added successfully. Product ID: " + productId);
+        } else {
+            System.out.println("Product could not be added.");
         }
     }
 
     // Display all products
     public void viewProducts() {
-        if (productMap.isEmpty()) {
+        List<Product> products = productDAO.findAll();
+        if (products.isEmpty()) {
             System.out.println("No products available in inventory.");
             return;
         }
-        for (Product p : productMap.values()) {
+        for (Product p : products) {
             System.out.println(p); // Calls p.toString();
+        }
+    }
+
+    public void searchProductsByName(String searchText) {
+        List<Product> products = productDAO.searchByName(searchText);
+        if (products.isEmpty()) {
+            System.out.println("No matching products found.");
+            return;
+        }
+        for (Product p : products) {
+            System.out.println(p);
         }
     }
 
@@ -42,38 +62,64 @@ public class InventoryService {
             System.out.println("Quantity cannot be negative.");
             return;
         }
-        Product p = productMap.get(productId);
-        if (p == null) {
+        if (productDAO.updateQuantity(productId, newQuantity)) {
+            System.out.println("Product quantity updated successfully.");
+        } else {
             System.out.println("Product not found.");
-            return;
         }
-        p.setQuantity(newQuantity);
-        System.out.println("Product quantity updated successfully.");
     }
 
     // Place Order
-    public void placeOrder(int orderId, int productId, int orderQuantity) {
+    public void placeOrder(int productId, int orderQuantity) {
         if (orderQuantity <= 0) {
             System.out.println("Order quantity must be greater than zero.");
             return;
         }
-        Product p = productMap.get(productId);
-        if (p == null) {
+
+        Optional<Product> product = productDAO.findById(productId);
+        if (product.isEmpty()) {
             System.out.println("Product not found.");
             return;
         }
+
+        Product p = product.get();
         if (p.getQuantity() < orderQuantity) {
             System.out.println("Insufficient stock available.");
             return;
         }
 
-        // reduce stock
-        p.setQuantity(p.getQuantity() - orderQuantity);
+        int updatedQuantity = p.getQuantity() - orderQuantity;
+        Order order = new Order(productId, orderQuantity, p.getPrice());
 
-        // create order
-        Order order = new Order(orderId, productId, orderQuantity, p.getPrice());
+        try (Connection conn = databaseManager.getConnection()) {
+            conn.setAutoCommit(false);
 
-        System.out.println("Order placed successfully.");
-        System.out.println(order);
+            int orderId = orderDAO.addOrder(conn, order);
+            boolean quantityUpdated = productDAO.updateQuantity(conn, productId, updatedQuantity);
+
+            if (orderId <= 0 || !quantityUpdated) {
+                conn.rollback();
+                System.out.println("Order could not be placed.");
+                return;
+            }
+
+            conn.commit();
+            System.out.println("Order placed successfully. Order ID: " + orderId);
+            System.out.println("Total Price: " + order.getTotalPrice());
+            System.out.println("Remaining Stock: " + updatedQuantity);
+        } catch (SQLException e) {
+            System.out.println("Order could not be placed.");
+        }
+    }
+
+    public void viewOrders() {
+        List<Order> orders = orderDAO.findAll();
+        if (orders.isEmpty()) {
+            System.out.println("No orders available.");
+            return;
+        }
+        for (Order order : orders) {
+            System.out.println(order);
+        }
     }
 }
