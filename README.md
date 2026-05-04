@@ -68,7 +68,7 @@ The application creates `data/inventory.db` automatically. This file is ignored 
 
 ## Sample Execution
 
-![Program Execution](screenshots/execution-output.png)
+![V2 Program Execution](screenshots/execution-output-v2.png)
 
 ## Purpose
 
