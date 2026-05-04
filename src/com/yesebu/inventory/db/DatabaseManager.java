@@ -30,7 +30,7 @@ public class DatabaseManager {
 
             stmt.execute("""
                     CREATE TABLE IF NOT EXISTS products (
-                        product_id INTEGER PRIMARY KEY,
+                        product_id INTEGER PRIMARY KEY AUTOINCREMENT,
                         product_name TEXT NOT NULL,
                         price REAL NOT NULL CHECK (price >= 0),
                         quantity INTEGER NOT NULL CHECK (quantity >= 0)
@@ -39,7 +39,7 @@ public class DatabaseManager {
 
             stmt.execute("""
                     CREATE TABLE IF NOT EXISTS orders (
-                        order_id INTEGER PRIMARY KEY,
+                        order_id INTEGER PRIMARY KEY AUTOINCREMENT,
                         product_id INTEGER NOT NULL,
                         order_quantity INTEGER NOT NULL CHECK (order_quantity > 0),
                         total_price REAL NOT NULL,

@@ -7,6 +7,10 @@ public class Product {
     private double price;
     private int quantity;
 
+    public Product(String productName, double price, int quantity) {
+        this(0, productName, price, quantity);
+    }
+
     public Product(int productId, String productName, double price, int quantity) {
         if (productName == null || productName.trim().isEmpty()) {
             throw new IllegalArgumentException("Product name cannot be empty.");

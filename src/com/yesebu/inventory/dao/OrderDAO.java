@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,29 +19,43 @@ public class OrderDAO {
         this.databaseManager = databaseManager;
     }
 
-    public boolean addOrder(Order order) {
+    public int addOrder(Order order) {
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = prepareAddOrderStatement(conn, order)) {
             stmt.executeUpdate();
-            return true;
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
         } catch (SQLException e) {
-            return false;
+            System.out.println("Unable to add order.");
         }
+
+        return -1;
     }
 
-    public boolean addOrder(Connection conn, Order order) throws SQLException {
+    public int addOrder(Connection conn, Order order) throws SQLException {
         try (PreparedStatement stmt = prepareAddOrderStatement(conn, order)) {
-            return stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
         }
+
+        return -1;
     }
 
     private PreparedStatement prepareAddOrderStatement(Connection conn, Order order) throws SQLException {
-        String sql = "INSERT INTO orders (order_id, product_id, order_quantity, total_price) VALUES (?, ?, ?, ?)";
-        PreparedStatement stmt = conn.prepareStatement(sql);
-        stmt.setInt(1, order.getOrderId());
-        stmt.setInt(2, order.getProductId());
-        stmt.setInt(3, order.getOrderQuantity());
-        stmt.setDouble(4, order.getTotalPrice());
+        String sql = "INSERT INTO orders (product_id, order_quantity, total_price) VALUES (?, ?, ?)";
+        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        stmt.setInt(1, order.getProductId());
+        stmt.setInt(2, order.getOrderQuantity());
+        stmt.setDouble(3, order.getTotalPrice());
         return stmt;
     }
 

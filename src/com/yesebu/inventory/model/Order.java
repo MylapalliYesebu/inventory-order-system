@@ -7,6 +7,10 @@ public class Order {
     private int orderQuantity;
     private double totalPrice;
 
+    public Order(int productId, int orderQuantity, double pricePerUnit) {
+        this(0, productId, orderQuantity, orderQuantity * pricePerUnit, true);
+    }
+
     public Order(int orderId, int productId, int orderQuantity, double pricePerUnit) {
         this(orderId, productId, orderQuantity, orderQuantity * pricePerUnit, true);
     }

@@ -5,3 +5,5 @@ folder_structure.txt
 out/
 data/
 lib/*.jar
+.agents/
+.codex/

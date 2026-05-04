@@ -25,10 +25,11 @@ public class InventoryService {
 
     // Add new product
     public void addProduct(Product p) {
-        if (productDAO.addProduct(p)) {
-            System.out.println("Product added successfully.");
+        int productId = productDAO.addProduct(p);
+        if (productId > 0) {
+            System.out.println("Product added successfully. Product ID: " + productId);
         } else {
-            System.out.println("Product with this ID already exists.");
+            System.out.println("Product could not be added.");
         }
     }
 
@@ -69,7 +70,7 @@ public class InventoryService {
     }
 
     // Place Order
-    public void placeOrder(int orderId, int productId, int orderQuantity) {
+    public void placeOrder(int productId, int orderQuantity) {
         if (orderQuantity <= 0) {
             System.out.println("Order quantity must be greater than zero.");
             return;
@@ -88,25 +89,26 @@ public class InventoryService {
         }
 
         int updatedQuantity = p.getQuantity() - orderQuantity;
-        Order order = new Order(orderId, productId, orderQuantity, p.getPrice());
+        Order order = new Order(productId, orderQuantity, p.getPrice());
 
         try (Connection conn = databaseManager.getConnection()) {
             conn.setAutoCommit(false);
 
-            boolean orderAdded = orderDAO.addOrder(conn, order);
+            int orderId = orderDAO.addOrder(conn, order);
             boolean quantityUpdated = productDAO.updateQuantity(conn, productId, updatedQuantity);
 
-            if (!orderAdded || !quantityUpdated) {
+            if (orderId <= 0 || !quantityUpdated) {
                 conn.rollback();
                 System.out.println("Order could not be placed.");
                 return;
             }
 
             conn.commit();
-            System.out.println("Order placed successfully.");
-            System.out.println(order);
+            System.out.println("Order placed successfully. Order ID: " + orderId);
+            System.out.println("Total Price: " + order.getTotalPrice());
+            System.out.println("Remaining Stock: " + updatedQuantity);
         } catch (SQLException e) {
-            System.out.println("Order could not be placed. Order ID may already exist.");
+            System.out.println("Order could not be placed.");
         }
     }
 

@@ -67,13 +67,12 @@ public class InventoryApp {
     }
 
     private void addProduct() {
-        int productId = readInt("Enter Product ID: ");
         String productName = readText("Enter Product Name: ");
         double price = readDouble("Enter Price: ");
         int quantity = readInt("Enter Quantity: ");
 
         try {
-            inventoryService.addProduct(new Product(productId, productName, price, quantity));
+            inventoryService.addProduct(new Product(productName, price, quantity));
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
@@ -86,10 +85,11 @@ public class InventoryApp {
     }
 
     private void placeOrder() {
-        int orderId = readInt("Enter Order ID: ");
+        System.out.println("Available Products:");
+        inventoryService.viewProducts();
         int productId = readInt("Enter Product ID: ");
         int orderQuantity = readInt("Enter Order Quantity: ");
-        inventoryService.placeOrder(orderId, productId, orderQuantity);
+        inventoryService.placeOrder(productId, orderQuantity);
     }
 
     private void searchProducts() {

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,20 +20,26 @@ public class ProductDAO {
         this.databaseManager = databaseManager;
     }
 
-    public boolean addProduct(Product product) {
-        String sql = "INSERT INTO products (product_id, product_name, price, quantity) VALUES (?, ?, ?, ?)";
+    public int addProduct(Product product) {
+        String sql = "INSERT INTO products (product_name, price, quantity) VALUES (?, ?, ?)";
 
         try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, product.getProductId());
-            stmt.setString(2, product.getProductName());
-            stmt.setDouble(3, product.getPrice());
-            stmt.setInt(4, product.getQuantity());
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, product.getProductName());
+            stmt.setDouble(2, product.getPrice());
+            stmt.setInt(3, product.getQuantity());
             stmt.executeUpdate();
-            return true;
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
         } catch (SQLException e) {
-            return false;
+            System.out.println("Unable to add product.");
         }
+
+        return -1;
     }
 
     public List<Product> findAll() {
